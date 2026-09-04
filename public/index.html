@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudCost Pro - Project Cost Estimation Platform</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#1E293B',
+                        accent: '#10B981'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
+
+    <!-- Top Navbar -->
+    <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between h-16 items-center">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-blue-600 rounded-xl shadow-lg shadow-blue-500/30">
+                    <i class="fa-solid fa-calculator text-white text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-none text-white">CloudCost <span class="text-blue-400">Pro</span></h1>
+                    <p class="text-xs text-slate-400">Cloud-Based Cost Estimation Platform</p>
+                </div>
+            </div>
+
+            <!-- Auth Buttons / User Profile -->
+            <div id="authSection" class="flex items-center space-x-3">
+                <button onclick="openModal('loginModal')" class="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition">Sign In</button>
+                <button onclick="openModal('registerModal')" class="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow-md shadow-blue-600/20 transition">Get Started</button>
+            </div>
+            
+            <div id="userSection" class="hidden flex items-center space-x-4">
+                <div class="text-right">
+                    <span id="userNameDisplay" class="block text-sm font-medium text-white">User</span>
+                    <span id="userEmailDisplay" class="block text-xs text-slate-400">user@example.com</span>
+                </div>
+                <button onclick="logout()" class="p-2 text-slate-400 hover:text-red-400 transition" title="Logout">
+                    <i class="fa-solid fa-right-from-bracket text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Navigation Tabs -->
+        <div class="flex border-b border-slate-700 mb-8 space-x-6">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn pb-4 font-medium text-blue-400 border-b-2 border-blue-500 flex items-center space-x-2">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Dashboard</span>
+            </button>
+            <button onclick="switchTab('projects')" id="tab-projects" class="tab-btn pb-4 font-medium text-slate-400 hover:text-slate-200 flex items-center space-x-2">
+                <i class="fa-solid fa-folder-tree"></i>
+                <span>Projects</span>
+            </button>
+            <button onclick="switchTab('estimator')" id="tab-estimator" class="tab-btn pb-4 font-medium text-slate-400 hover:text-slate-200 flex items-center space-x-2">
+                <i class="fa-solid fa-file-invoice-dollar"></i>
+                <span>Cost Estimator</span>
+            </button>
+            <button onclick="switchTab('pert')" id="tab-pert" class="tab-btn pb-4 font-medium text-slate-400 hover:text-slate-200 flex items-center space-x-2">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>PERT Algorithm</span>
+            </button>
+        </div>
+
+        <!-- 1. DASHBOARD VIEW -->
+        <section id="view-dashboard" class="view-content space-y-6">
+            <!-- Stat Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-slate-400">Total Projects</p>
+                        <h3 id="statTotalProjects" class="text-3xl font-bold text-white mt-1">0</h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-folder"></i>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-slate-400">Active Estimates</p>
+                        <h3 id="statTotalEstimates" class="text-3xl font-bold text-emerald-400 mt-1">0</h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-file-invoice"></i>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-slate-400">Total Estimated Budget</p>
+                        <h3 id="statTotalBudget" class="text-3xl font-bold text-indigo-400 mt-1">$0</h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-sack-dollar"></i>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-slate-400">Approved Budget</p>
+                        <h3 id="statApprovedBudget" class="text-3xl font-bold text-purple-400 mt-1">$0</h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl">
+                    <h3 class="text-lg font-semibold text-white mb-4 flex items-center justify-between">
+                        <span>Cost by Category</span>
+                        <i class="fa-solid fa-chart-pie text-slate-400"></i>
+                    </h3>
+                    <div class="h-64 flex items-center justify-center">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl">
+                    <h3 class="text-lg font-semibold text-white mb-4 flex items-center justify-between">
+                        <span>Monthly Budget Estimates</span>
+                        <i class="fa-solid fa-chart-column text-slate-400"></i>
+                    </h3>
+                    <div class="h-64 flex items-center justify-center">
+                        <canvas id="monthlyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. PROJECTS VIEW -->
+        <section id="view-projects" class="view-content hidden space-y-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold text-white">Projects Management</h2>
+                    <p class="text-sm text-slate-400">Manage cloud projects and their estimation life-cycles</p>
+                </div>
+                <button onclick="openModal('createProjectModal')" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg shadow-lg shadow-blue-600/20 flex items-center space-x-2 transition">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>New Project</span>
+                </button>
+            </div>
+
+            <div class="bg-slate-800 border border-slate-700 rounded-2xl shadow-xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead class="bg-slate-700/50 text-slate-400 font-semibold uppercase text-xs">
+                            <tr>
+                                <th class="p-4">Project Name</th>
+                                <th class="p-4">Category</th>
+                                <th class="p-4">Priority</th>
+                                <th class="p-4">Estimated Budget</th>
+                                <th class="p-4">Status</th>
+                                <th class="p-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projectTableBody" class="divide-y divide-slate-700/60 text-slate-200">
+                            <tr>
+                                <td colspan="6" class="p-8 text-center text-slate-400">Loading projects...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. ESTIMATOR VIEW -->
+        <section id="view-estimator" class="view-content hidden space-y-6">
+            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl">
+                <h3 class="text-lg font-bold text-white mb-2">Cost Breakdown Builder</h3>
+                <p class="text-sm text-slate-400 mb-6">Select a project to generate itemized costs, labor units, and taxes.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Select Project</label>
+                        <select id="estimatorProjectSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                            <!-- Injected dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Contingency Buffer (%)</label>
+                        <input type="number" id="contingencyRateInput" value="10" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Tax Rate (%)</label>
+                        <input type="number" id="taxRateInput" value="5" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <!-- Add Item Form -->
+                <div class="bg-slate-900/60 border border-slate-700/70 p-4 rounded-xl mb-6">
+                    <h4 class="text-xs font-bold uppercase text-blue-400 mb-3">+ Add New Cost Item</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                        <input type="text" id="costItemName" placeholder="Item Name (e.g. AWS EC2)" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                        <select id="costItemCategory" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                            <option value="infrastructure">Infrastructure</option>
+                            <option value="labor">Labor</option>
+                            <option value="software">Software</option>
+                            <option value="licensing">Licensing</option>
+                            <option value="testing">Testing</option>
+                            <option value="maintenance">Maintenance</option>
+                        </select>
+                        <input type="number" id="costItemUnitCost" placeholder="Unit Cost ($)" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                        <input type="number" id="costItemQuantity" placeholder="Quantity" value="1" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                        <button onclick="addCostItemLocal()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2 rounded-lg text-sm transition">Add Item</button>
+                    </div>
+                </div>
+
+                <!-- Live Items Table -->
+                <div class="overflow-x-auto mb-6">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-700/40 text-slate-400 uppercase text-xs">
+                            <tr>
+                                <th class="p-3">Item Name</th>
+                                <th class="p-3">Category</th>
+                                <th class="p-3">Unit Cost</th>
+                                <th class="p-3">Qty</th>
+                                <th class="p-3">Total</th>
+                                <th class="p-3 text-right">Remove</th>
+                            </tr>
+                        </thead>
+                        <tbody id="estimatorTableBody" class="divide-y divide-slate-700">
+                            <!-- Items go here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Totals Display -->
+                <div class="bg-slate-900 p-6 rounded-xl border border-slate-700 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                    <div>
+                        <span class="text-xs text-slate-400 uppercase">Subtotal</span>
+                        <h4 id="calcSubtotal" class="text-xl font-bold text-white mt-1">$0.00</h4>
+                    </div>
+                    <div>
+                        <span class="text-xs text-slate-400 uppercase">Contingency</span>
+                        <h4 id="calcContingency" class="text-xl font-bold text-amber-400 mt-1">$0.00</h4>
+                    </div>
+                    <div>
+                        <span class="text-xs text-slate-400 uppercase">Tax</span>
+                        <h4 id="calcTax" class="text-xl font-bold text-slate-300 mt-1">$0.00</h4>
+                    </div>
+                    <div>
+                        <span class="text-xs text-slate-400 uppercase">Grand Total</span>
+                        <h4 id="calcGrandTotal" class="text-2xl font-bold text-emerald-400 mt-1">$0.00</h4>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. PERT CALCULATOR VIEW -->
+        <section id="view-pert" class="view-content hidden space-y-6">
+            <div class="max-w-3xl mx-auto bg-slate-800 border border-slate-700 p-8 rounded-2xl shadow-xl">
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="w-10 h-10 bg-indigo-600/20 text-indigo-400 rounded-xl flex items-center justify-center text-lg font-bold">
+                        <i class="fa-solid fa-brain"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-white">PERT Three-Point Estimation Algorithm</h3>
+                        <p class="text-xs text-slate-400">Formula: E = (Optimistic + 4×MostLikely + Pessimistic) / 6</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 my-6">
+                    <div>
+                        <label class="block text-xs font-semibold text-emerald-400 uppercase mb-2">Optimistic Cost ($)</label>
+                        <input type="number" id="pertOpt" value="15000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-blue-400 uppercase mb-2">Most Likely Cost ($)</label>
+                        <input type="number" id="pertLikely" value="22000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-red-400 uppercase mb-2">Pessimistic Cost ($)</label>
+                        <input type="number" id="pertPess" value="35000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <button onclick="calculatePert()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/20 transition mb-6">
+                    Run PERT Statistical Analysis
+                </button>
+
+                <!-- PERT Output -->
+                <div id="pertResultBox" class="bg-slate-900 border border-slate-700 rounded-xl p-6 space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                        <span class="text-sm text-slate-400">Expected Cost (Weighted Average):</span>
+                        <span id="pertExpected" class="text-2xl font-bold text-indigo-400">$0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                        <span class="text-sm text-slate-400">Standard Deviation (Risk Buffer):</span>
+                        <span id="pertStdDev" class="text-lg font-semibold text-slate-300">±$0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-slate-400">95% Confidence Interval:</span>
+                        <span id="pertRange95" class="text-sm font-semibold text-emerald-400">$0.00 - $0.00</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- AUTH MODALS -->
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white">Sign In to CloudCost</h3>
+                <button onclick="closeModal('loginModal')" class="text-slate-400 hover:text-white">&times;</button>
+            </div>
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <input type="email" id="loginEmail" required placeholder="Email address" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none focus:border-blue-500">
+                <input type="password" id="loginPass" required placeholder="Password" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none focus:border-blue-500">
+                <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 font-semibold rounded-lg text-white text-sm transition shadow-lg shadow-blue-600/20">Sign In</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white">Create Account</h3>
+                <button onclick="closeModal('registerModal')" class="text-slate-400 hover:text-white">&times;</button>
+            </div>
+            <form onsubmit="handleRegister(event)" class="space-y-3">
+                <input type="text" id="regName" required placeholder="Full Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none focus:border-blue-500">
+                <input type="email" id="regEmail" required placeholder="Email address" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none focus:border-blue-500">
+                <input type="password" id="regPass" required placeholder="Password (min 6 chars)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none focus:border-blue-500">
+                <input type="text" id="regCompany" placeholder="Company Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none focus:border-blue-500">
+                <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 font-semibold rounded-lg text-white text-sm transition shadow-lg shadow-blue-600/20">Register</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Project Modal -->
+    <div id="createProjectModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white">Create Cloud Project</h3>
+                <button onclick="closeModal('createProjectModal')" class="text-slate-400 hover:text-white">&times;</button>
+            </div>
+            <form onsubmit="handleCreateProject(event)" class="space-y-3">
+                <input type="text" id="projName" required placeholder="Project Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none focus:border-blue-500">
+                <textarea id="projDesc" required placeholder="Project Description" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none focus:border-blue-500"></textarea>
+                <div class="grid grid-cols-2 gap-3">
+                    <select id="projCategory" class="bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm">
+                        <option value="cloud-infrastructure">Cloud Infrastructure</option>
+                        <option value="web-development">Web Development</option>
+                        <option value="mobile-app">Mobile App</option>
+                        <option value="ai-ml">AI / Machine Learning</option>
+                    </select>
+                    <select id="projPriority" class="bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm">
+                        <option value="medium">Medium Priority</option>
+                        <option value="high">High Priority</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="date" id="projStart" required class="bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm">
+                    <input type="date" id="projEnd" required class="bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm">
+                </div>
+                <input type="text" id="projClient" required placeholder="Client Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none focus:border-blue-500">
+                <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 font-semibold rounded-lg text-white text-sm transition">Save Project</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Frontend Logic Script -->
+    <script>
+        const API_BASE = '/api';
+        let currentToken = localStorage.getItem('token') || null;
+        let currentUser = JSON.parse(localStorage.getItem('user')) || null;
+        let localCostItems = [];
+        let categoryChartInstance = null;
+        let monthlyChartInstance = null;
+
+        // Initialize App
+        window.addEventListener('DOMContentLoaded', () => {
+            updateAuthUI();
+            loadDashboard();
+            calculatePert();
+        });
+
+        function updateAuthUI() {
+            if (currentToken && currentUser) {
+                document.getElementById('authSection').classList.add('hidden');
+                document.getElementById('userSection').classList.remove('hidden');
+                document.getElementById('userNameDisplay').textContent = currentUser.name;
+                document.getElementById('userEmailDisplay').textContent = currentUser.email;
+            } else {
+                document.getElementById('authSection').classList.remove('hidden');
+                document.getElementById('userSection').classList.add('hidden');
+            }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.view-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('text-blue-400', 'border-b-2', 'border-blue-500');
+                el.classList.add('text-slate-400');
+            });
+
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabId}`).classList.add('text-blue-400', 'border-b-2', 'border-blue-500');
+
+            if (tabId === 'projects') loadProjects();
+            if (tabId === 'dashboard') loadDashboard();
+            if (tabId === 'estimator') populateProjectDropdown();
+        }
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        // AUTH
+        async function handleRegister(e) {
+            e.preventDefault();
+            const res = await fetch(`${API_BASE}/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: document.getElementById('regName').value,
+                    email: document.getElementById('regEmail').value,
+                    password: document.getElementById('regPass').value,
+                    company: document.getElementById('regCompany').value
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                loginSuccess(data.data.token, data.data.user);
+                closeModal('registerModal');
+            } else alert(data.message);
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const res = await fetch(`${API_BASE}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: document.getElementById('loginEmail').value,
+                    password: document.getElementById('loginPass').value
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                loginSuccess(data.data.token, data.data.user);
+                closeModal('loginModal');
+            } else alert(data.message);
+        }
+
+        function loginSuccess(token, user) {
+            currentToken = token;
+            currentUser = user;
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
+            updateAuthUI();
+            loadDashboard();
+        }
+
+        function logout() {
+            localStorage.clear();
+            currentToken = null;
+            currentUser = null;
+            updateAuthUI();
+            location.reload();
+        }
+
+        // DASHBOARD
+        async function loadDashboard() {
+            if (!currentToken) return;
+            try {
+                const res = await fetch(`${API_BASE}/reports/dashboard`, {
+                    headers: { 'Authorization': `Bearer ${currentToken}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('statTotalProjects').textContent = data.data.stats.totalProjects;
+                    document.getElementById('statTotalEstimates').textContent = data.data.stats.totalEstimates;
+                    document.getElementById('statTotalBudget').textContent = `$${(data.data.budget.totalEstimated || 0).toLocaleString()}`;
+                    document.getElementById('statApprovedBudget').textContent = `$${(data.data.budget.totalApproved || 0).toLocaleString()}`;
+                    
+                    renderCharts();
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        // CHARTS
+        function renderCharts() {
+            const ctxCat = document.getElementById('categoryChart').getContext('2d');
+            if (categoryChartInstance) categoryChartInstance.destroy();
+            categoryChartInstance = new Chart(ctxCat, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Infrastructure', 'Labor', 'Licensing', 'Testing'],
+                    datasets: [{
+                        data: [45, 30, 15, 10],
+                        backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            const ctxMon = document.getElementById('monthlyChart').getContext('2d');
+            if (monthlyChartInstance) monthlyChartInstance.destroy();
+            monthlyChartInstance = new Chart(ctxMon, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Estimated ($)',
+                        data: [12000, 19000, 25000, 22000, 30000, 28000],
+                        backgroundColor: '#3B82F6'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        // PROJECTS
+        async function loadProjects() {
+            if (!currentToken) return;
+            const res = await fetch(`${API_BASE}/projects`, {
+                headers: { 'Authorization': `Bearer ${currentToken}` }
+            });
+            const data = await res.json();
+            const tbody = document.getElementById('projectTableBody');
+            tbody.innerHTML = '';
+
+            if (data.data && data.data.length > 0) {
+                data.data.forEach(p => {
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-700/30">
+                            <td class="p-4 font-semibold text-white">${p.name}</td>
+                            <td class="p-4 capitalize text-slate-300">${p.category}</td>
+                            <td class="p-4"><span class="px-2 py-1 text-xs rounded-full ${p.priority === 'high' ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400'}">${p.priority}</span></td>
+                            <td class="p-4 font-medium text-emerald-400">$${(p.budget.estimated || 0).toLocaleString()}</td>
+                            <td class="p-4"><span class="text-xs text-slate-400 uppercase">${p.status}</span></td>
+                            <td class="p-4 text-right">
+                                <button class="text-blue-400 hover:text-blue-300 text-xs mr-2">Estimate</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">No projects created yet.</td></tr>`;
+            }
+        }
+
+        async function handleCreateProject(e) {
+            e.preventDefault();
+            if (!currentToken) return alert('Please sign in first');
+
+            const body = {
+                name: document.getElementById('projName').value,
+                description: document.getElementById('projDesc').value,
+                category: document.getElementById('projCategory').value,
+                priority: document.getElementById('projPriority').value,
+                startDate: document.getElementById('projStart').value,
+                endDate: document.getElementById('projEnd').value,
+                client: { name: document.getElementById('projClient').value }
+            };
+
+            const res = await fetch(`${API_BASE}/projects`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (data.success) {
+                closeModal('createProjectModal');
+                loadProjects();
+            } else alert(data.message);
+        }
+
+        async function populateProjectDropdown() {
+            if (!currentToken) return;
+            const res = await fetch(`${API_BASE}/projects`, {
+                headers: { 'Authorization': `Bearer ${currentToken}` }
+            });
+            const data = await res.json();
+            const select = document.getElementById('estimatorProjectSelect');
+            select.innerHTML = '';
+            if (data.data) {
+                data.data.forEach(p => {
+                    select.innerHTML += `<option value="${p._id}">${p.name}</option>`;
+                });
+            }
+        }
+
+        // COST ESTIMATOR BUILDER
+        function addCostItemLocal() {
+            const name = document.getElementById('costItemName').value;
+            const category = document.getElementById('costItemCategory').value;
+            const unitCost = parseFloat(document.getElementById('costItemUnitCost').value) || 0;
+            const quantity = parseFloat(document.getElementById('costItemQuantity').value) || 1;
+
+            if (!name || unitCost <= 0) return alert('Enter a valid item name and cost');
+
+            localCostItems.push({ name, category, unitCost, quantity, total: unitCost * quantity });
+            document.getElementById('costItemName').value = '';
+            document.getElementById('costItemUnitCost').value = '';
+            renderEstimatorTable();
+        }
+
+        function removeCostItem(index) {
+            localCostItems.splice(index, 1);
+            renderEstimatorTable();
+        }
+
+        function renderEstimatorTable() {
+            const tbody = document.getElementById('estimatorTableBody');
+            tbody.innerHTML = '';
+            let subtotal = 0;
+
+            localCostItems.forEach((item, idx) => {
+                subtotal += item.total;
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-800/60">
+                        <td class="p-3 text-white font-medium">${item.name}</td>
+                        <td class="p-3 capitalize text-slate-400">${item.category}</td>
+                        <td class="p-3">$${item.unitCost.toLocaleString()}</td>
+                        <td class="p-3">${item.quantity}</td>
+                        <td class="p-3 text-emerald-400 font-semibold">$${item.total.toLocaleString()}</td>
+                        <td class="p-3 text-right">
+                            <button onclick="removeCostItem(${idx})" class="text-red-400 hover:text-red-300 text-xs">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            const contRate = parseFloat(document.getElementById('contingencyRateInput').value) || 0;
+            const taxRate = parseFloat(document.getElementById('taxRateInput').value) || 0;
+
+            const contingency = subtotal * (contRate / 100);
+            const tax = (subtotal + contingency) * (taxRate / 100);
+            const grandTotal = subtotal + contingency + tax;
+
+            document.getElementById('calcSubtotal').textContent = `$${subtotal.toLocaleString(undefined, {minimumFractionDigits:2})}`;
+            document.getElementById('calcContingency').textContent = `$${contingency.toLocaleString(undefined, {minimumFractionDigits:2})}`;
+            document.getElementById('calcTax').textContent = `$${tax.toLocaleString(undefined, {minimumFractionDigits:2})}`;
+            document.getElementById('calcGrandTotal').textContent = `$${grandTotal.toLocaleString(undefined, {minimumFractionDigits:2})}`;
+        }
+
+        // PERT CALCULATOR
+        async function calculatePert() {
+            const opt = parseFloat(document.getElementById('pertOpt').value) || 0;
+            const likely = parseFloat(document.getElementById('pertLikely').value) || 0;
+            const pess = parseFloat(document.getElementById('pertPess').value) || 0;
+
+            const res = await fetch(`${API_BASE}/estimates/three-point`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` },
+                body: JSON.stringify({ optimistic: opt, mostLikely: likely, pessimistic: pess })
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('pertExpected').textContent = `$${data.data.expected.toLocaleString()}`;
+                document.getElementById('pertStdDev').textContent = `±$${data.data.standardDeviation.toLocaleString()}`;
+                document.getElementById('pertRange95').textContent = `$${data.data.confidence95.low.toLocaleString()} - $${data.data.confidence95.high.toLocaleString()}`;
+            }
+        }
+    </script>
+</body>
+</html>
